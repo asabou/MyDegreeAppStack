@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo -u alexandru docker-compose -f /home/alexandru/cicd/docker-compose.yml up --remove-orphans -d

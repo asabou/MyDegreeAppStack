@@ -1,0 +1,80 @@
+#!/bin/bash
+
+ARG=$1
+
+RENTYROOT=/home/alexandru/renty
+
+RENTYAPP=rentyapp
+RENTYJAR=renty.jar
+
+DOCKER=docker-compose.yml
+
+ANGARCH=angulararchive
+RESTARCH=restarchive
+
+RENTYUSER=alexandru
+
+TMPJAR=/tmp/build/libs/$RENTYJAR
+TMPAPP=/tmp/dist/$RENTYAPP
+
+RESTAPICONTAINER=renty-restapi
+ANGULARCONTAINER=renty-angular
+
+changerights() {
+	chmod -R 775 $RENTYROOT
+}
+
+angularcopy() {
+	changerights
+	DATE=`date '+%Y.%m.%d-%H:%M:%S'`
+        cd $RENTYROOT
+	APP=`ls | grep ${RENTYAPP} | tail -n 1`
+	if [ "$APP" != "" ]; then
+		sudo -u $RENTYUSER mv $RENTYROOT/$RENTYAPP $RENTYROOT/$ANGARCH/$RENTYAPP.${DATE}
+		echo "angularcopy()"
+	fi
+}
+
+restapicopy() {
+	changerights
+	DATE=`date '+%Y.%m.%d-%H:%M:%S'`
+        cd $RENTYROOT
+	JAR=`ls | grep ${RENTYJAR} | tail -n 1`
+	if [ "$JAR" != "" ]; then
+		sudo -u $RENTYUSER mv $RENTYROOT/$RENTYJAR $RENTYROOT/$RESTARCH/$RENTYJAR.${DATE}
+		echo "restapicopy()"
+	fi
+}
+
+preparecontainers() {
+	sudo -u $RENTYUSER docker stop $RESTAPICONTAINER
+	sudo -u $RENTYUSER docker stop $ANGULARCONTAINER
+	sudo -u $RENTYUSER docker rm $RESTAPICONTAINER
+	sudo -u $RENTYUSER docker rm $ANGULARCONTAINER
+}
+
+restart() {
+	changerights
+	preparecontainers
+	sudo -u $RENTYUSER chmod a+x $RENTYROOT/$RENTYJAR
+	docker-compose -f $RENTYROOT/$DOCKER up --remove-orphans -d
+	echo "restart()"
+}
+
+copyjarfromtmp() {
+	sudo -u $RENTYUSER cp $TMPJAR $RENTYROOT
+}
+
+copyappfromtmp() {
+	sudo -u $RENTYUSER cp -r $TMPAPP $RENTYROOT
+}
+
+case $ARG in
+	angcopy) angularcopy ;;
+	apicopy) restapicopy ;;
+	angular) copyappfromtmp ;;
+        restapi) copyjarfromtmp ;;
+        restart) restart ;;
+        *) echo "Invalid argument!"
+esac
+

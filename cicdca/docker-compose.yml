@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  sonarqube:
+    image: sonarqube
+    ports:
+      - 8300:9000
+    networks:
+      - cicd
+
+  jenkins:
+    image: jenkins/jenkins:jdk11
+    ports: 
+      - 8200:8080
+    networks:
+      - cicd
+
+networks: 
+  cicd:

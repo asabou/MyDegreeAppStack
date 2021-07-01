@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  renty-database:
+    image: mysql
+    container_name: renty-database
+    environment:
+      MYSQL_USER: root
+    ports:
+      - 8050:3306
+    networks:
+      - backendNetwork
+
+  renty-restapi:
+    image: openjdk:15
+    container_name: renty-restapi
+    ports: 
+      - 8080:8080
+    depends_on:
+      - renty-database
+    volumes:
+      - ./renty.jar:/application.jar
+    command: ["java", "-jar", "application.jar"]
+    networks:
+      - backendNetwork
+      - frontendNetwork
+
+  renty-angular:
+    image: nginx
+    container_name: renty-angular
+    ports:
+      - 80:80
+    depends_on: 
+      - renty-restapi
+    volumes:
+      - ./renty.nginx.conf:/etc/nginx/sites-enabled/nginx.conf
+      - ./rentyapp:/usr/share/nginx/html
+    networks:
+      - frontendNetwork
+
+volumes:
+  rentyVolumes:
+
+networks:
+  backendNetwork:
+  frontendNetwork:
